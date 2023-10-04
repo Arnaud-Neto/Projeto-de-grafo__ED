@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: bibgrafo
+Version: 1.2.0
+Summary: Biblioteca para ensino de Teoria dos Grafos
+Home-page: UNKNOWN
+Author: Henrique do Nascimento Cunha
+License: MIT
+Platform: UNKNOWN
+Requires-Dist: multipledispatch
+
+UNKNOWN
+

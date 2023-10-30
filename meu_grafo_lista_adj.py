@@ -21,7 +21,7 @@ class MeuGrafo(GrafoListaAdjacencia):
             
 
     def ha_laco(self):
-        for i in self.arestas: #pega todas as arestas um a um
+        for i in self.arestas.values(): #pega todas as arestas um a um
             if i.v1 == i.v2:    # vê se os vertices na ponta são o mesmo
                 return True     
         return False

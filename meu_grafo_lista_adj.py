@@ -94,3 +94,60 @@ class MeuGrafo(GrafoListaAdjacencia):
         g = MeuGrafo()
         g.adiciona_vertice(V)
         return recursao(V,set(),g)
+
+    def Menores_Caminhos_Bellman_Ford(self,Inicio:str,Final:str) -> tuple(bool,any):
+        
+
+        if not(self.existe_rotulo_vertice(Inicio)):
+            raise VerticeInvalidoError(f"O Rotulo do Vertice '{Inicio}' não foi encontrado") 
+        elif not(self.existe_rotulo_vertice(Final)):
+            raise VerticeInvalidoError(f"O Rotulo do Vertice '{Final}' não foi encontrado")
+        
+        def Ciclo() -> bool:
+            b = False
+            for aresta in self.arestas().values():
+                soma = self.Bellman_Ford_Var['B'][aresta.v1.rotulo] + aresta.peso
+                if soma < self.Bellman_Ford_Var['B'][aresta.v2.rotulo]:
+                    b = True
+                    self.Bellman_Ford_Var['B'][aresta.v2.rotulo] = soma
+                    self.Bellman_Ford_Var['P'][aresta.v2.rotulo] = [(aresta.v1.rotulo,aresta)]
+                elif soma == self.Bellman_Ford_Var['B'][aresta.v2.rotulo]:
+                    b = True
+                    self.Bellman_Ford_Var['P'][aresta.v2.rotulo].append((aresta.v1.rotulo,aresta))
+            return b
+        
+
+        def Finalizar() -> tuple(bool,any):
+            
+            if Ciclo(): return (False,"Ciclo Negativo")    
+                
+            def recursao(atual) -> list(MeuGrafo):
+                if self.Bellman_Ford_Var['P'][atual][0] is None:
+                    g = MeuGrafo()
+                    g.adiciona_vertice(self.vertices[atual])
+                    return [g]
+                
+                l = []
+                for i in self.Bellman_Ford_Var['P'][atual]:
+                    for j in recursao(i[0]):
+                        if atual in j.vertices: continue
+                        j.adiciona_vertice(self.vertices[atual])
+                        j.adiciona_aresta(i[1])
+                        l.append(j)
+                return l
+                
+
+            if self.Bellman_Ford_Var['B'][Final] == float('inf'): return (False,"Sem Caminho") # retorno caso não exista caminho até o Vertice
+            g = recursao(Final)
+            return (True, g)
+
+
+        self.Bellman_Ford_Var = {}
+
+        self.Bellman_Ford_Var['B'] = {i.rotulo:float('inf') for i in self.vertices}
+        self.Bellman_Ford_Var['B'][Inicio] = 0
+        self.Bellman_Ford_Var['P'] = {i.rotulo:[None] for i in self.vertices}
+        
+        for i in range(len(self.vertices)-1):Ciclo()
+        return Finalizar()
+

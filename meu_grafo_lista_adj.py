@@ -21,8 +21,6 @@ class MeuGrafo(GrafoListaAdjacencia):
                     retorno.add(v)
         return retorno
 
-            
-
     def ha_laco(self):
         for i in self.arestas.values(): #pega todas as arestas um a um
             if i.v1 == i.v2:    # vê se os vertices na ponta são o mesmo
@@ -95,59 +93,118 @@ class MeuGrafo(GrafoListaAdjacencia):
         g.adiciona_vertice(V)
         return recursao(V,set(),g)
 
-    def Menores_Caminhos_Bellman_Ford(self,Inicio:str,Final:str) -> tuple(bool,any):
-        
+    def Menores_Caminhos_Bellman_Ford(self,Inicio:str,Final:str,RetornarListaDe:str='Grafo') -> tuple(bool,any): # retona uma tupla sendo o primeiro items um booleano que diz se foi possivel pegar os menores caminhos e o segundo item sendo uma lista com os menores caminho caso pocivel, se não a saida vai ser uma string dizendo o motivo de não encontrar um menor caminho
 
         if not(self.existe_rotulo_vertice(Inicio)):
             raise VerticeInvalidoError(f"O Rotulo do Vertice '{Inicio}' não foi encontrado") 
         elif not(self.existe_rotulo_vertice(Final)):
             raise VerticeInvalidoError(f"O Rotulo do Vertice '{Final}' não foi encontrado")
         
-        def Ciclo() -> bool:
-            b = False
-            for aresta in self.arestas().values():
-                soma = self.Bellman_Ford_Var['B'][aresta.v1.rotulo] + aresta.peso
-                if soma < self.Bellman_Ford_Var['B'][aresta.v2.rotulo]:
-                    b = True
-                    self.Bellman_Ford_Var['B'][aresta.v2.rotulo] = soma
-                    self.Bellman_Ford_Var['P'][aresta.v2.rotulo] = [(aresta.v1.rotulo,aresta)]
-                elif soma == self.Bellman_Ford_Var['B'][aresta.v2.rotulo]:
-                    b = True
-                    self.Bellman_Ford_Var['P'][aresta.v2.rotulo].append((aresta.v1.rotulo,aresta))
-            return b
+        if RetornarListaDe not in ('Grafo', 'Lista de Vertices', 'Lista de Arestas', 'Lista de Vertices e Arestas', 'str'): raise ValueError(f"Tipo de Retorno '{RetornarListaDe}' não é um tipo de retorno valido")
+
+
+        class Lista_Retorno(): # objeto que é criado pela função finalizar caso <RetornarListaDe> seja diferente de 'Grafo'
+                def __init__(self) -> None:
+                    self.Vertices = []      # Lista de Vertices
+                    self.Arestas = []       # Lista de Arestas
+                    self.Vertices_Arestas = []  #Lista  de Vertices e Arestas
+                    self.String = ''        # Lista de str
+
+                def adiciona_vertice(self,V):
+                    self.Vertices.append(V)
+                    self.Vertices_Arestas.append(V)
+                    self.String += V.rotulo
+
+                def adiciona_aresta(self,A):
+                    self.Arestas.append(A)
+                    self.Vertices_Arestas.append(A)
+                    self.String += f" -{A.rotulo}-> "
+
+                def Retorno(self):
+                    match RetornarListaDe:
+
+                        case 'Lista de Vertices':
+                            return self.Vertices
+                        
+                        case 'Lista de Arestas':
+                            return self.Arestas
+                        
+                        case 'Lista de Vertices e Arestas':
+                            return self.Vertices_Arestas
+                        
+                        case 'str':
+                            return self.String
+                        
+
+
+        def Ciclo() -> bool: # realiza um ciclo do algoritimo de Bellman_Ford
+
+            b = False # se algum Beta Mudou ou não mudou ou não
+
+            for aresta in self.arestas().values(): # Pega todos os Objetos <Aresta>, Conciderando todas como arestas direcionadas sendo v1 o inicio e v2 o final
+
+                soma = self.Bellman_Ford_Var['B'][aresta.v1.rotulo] + aresta.peso #soma o Beta do inicio com o peso da aresta
+
+                if soma < self.Bellman_Ford_Var['B'][aresta.v2.rotulo]: # se a soma for menor que o beta do final
+
+                    b = True        # um beta mudou
+                    self.Bellman_Ford_Var['B'][aresta.v2.rotulo] = soma     # troca o beta do final para a soma
+                    self.Bellman_Ford_Var['P'][aresta.v2.rotulo] = [(aresta.v1.rotulo,aresta)]  # troca o pi 
+
+                elif soma == self.Bellman_Ford_Var['B'][aresta.v2.rotulo]:     # se o beta final for igual a soma
+
+                    self.Bellman_Ford_Var['P'][aresta.v2.rotulo].append((aresta.v1.rotulo,aresta))  # adiciona o um novo pi ao vertice
+            
+            return b # retorna um bool se algum beta mudou
         
 
-        def Finalizar() -> tuple(bool,any):
-            
-            if Ciclo(): return (False,"Ciclo Negativo")    
+        def Finalizar() -> tuple(bool,list(MeuGrafo)): # utiliza os pi's para retorna todos os menores caminhos do grafo em forma de grafos
+             
                 
-            def recursao(atual) -> list(MeuGrafo):
-                if self.Bellman_Ford_Var['P'][atual][0] is None:
-                    g = MeuGrafo()
-                    g.adiciona_vertice(self.vertices[atual])
-                    return [g]
+            def recursao(atual) -> list(MeuGrafo):     # Passa recurcivamente por todos os pi's do final até o inicio retornado um uma lista de grafos que representam o caminho passado
                 
-                l = []
-                for i in self.Bellman_Ford_Var['P'][atual]:
-                    for j in recursao(i[0]):
-                        if atual in j.vertices: continue
-                        j.adiciona_vertice(self.vertices[atual])
-                        j.adiciona_aresta(i[1])
-                        l.append(j)
-                return l
+                if self.Bellman_Ford_Var['P'][atual] is None: # Se o pi atual é None então chegamos ao inicio
+                    
+
+                    g = MeuGrafo() if RetornarListaDe == 'Grafo' else Lista_Retorno()   # Cria o Objeto à ser retornado 
+                    g.adiciona_vertice(self.vertices[atual]) # adiciona o vetice atual
+                    return [g]          # Retorna uma lista com um grafo
+                
+
+                l = []  # cria uma lista
+                
+                for i in self.Bellman_Ford_Var['P'][atual]:   # pega todos os pi's do Vertice atual
+                    for j in recursao(i[0]):        # aplica recursão em todos os pi's do Vetice atual, sendo j cada um dos grafos retornados
+                        
+                        if atual in j.vertices: continue    # se o Vertice atual já tiver aparecido no grafo então passa para o proximo sem adicionalo a lista l
+                        
+                        j.adiciona_vertice(self.vertices[atual])  # adiciona o Vertice atual no grafo
+                        j.adiciona_aresta(i[1])         # adiciona a aresta do pi
+                        l.append(j)               # adiciona o grafo a lista 
+                
+                return l # retorna uma lista de grafos
                 
 
             if self.Bellman_Ford_Var['B'][Final] == float('inf'): return (False,"Sem Caminho") # retorno caso não exista caminho até o Vertice
-            g = recursao(Final)
-            return (True, g)
+            g = recursao(Final) # recebe a lista de Objetos
+
+            if RetornarListaDe != 'Grafo': # se Retorno não for grafos
+                for i in range(len(g)):     # Pegua todos os objetos
+                    g[i] = g[i].Retorno()   # usa a Função Retorno de todos
+
+            return (True, g)    # retorna a lista
 
 
-        self.Bellman_Ford_Var = {}
+        self.Bellman_Ford_Var = {} # guarda as variaveis utilizadas em Bellman_Ford
 
-        self.Bellman_Ford_Var['B'] = {i.rotulo:float('inf') for i in self.vertices}
-        self.Bellman_Ford_Var['B'][Inicio] = 0
-        self.Bellman_Ford_Var['P'] = {i.rotulo:[None] for i in self.vertices}
+        self.Bellman_Ford_Var['B'] = {i.rotulo:float('inf') for i in self.vertices} # Betas de cada vertice (Começão em float('inf'))
+        self.Bellman_Ford_Var['B'][Inicio] = 0                                # O Beta do inicio começa em 0
+        self.Bellman_Ford_Var['P'] = {i.rotulo:[] for i in self.vertices}       # pi's de cada vertice (começão em [])
+        self.Bellman_Ford_Var['P'][Inicio] = None                           # o inicio não tem pi
+        self.Bellman_Ford_Var['Root'] = Inicio              # Guada o Root
         
-        for i in range(len(self.vertices)-1):Ciclo()
-        return Finalizar()
-
+        for i in range(len(self.vertices)):   # roda o código N vezes sendo N a quantidade de Vertices 
+            if Ciclo():continue       # Caso algum Beta tenha mudado continue
+            return Finalizar()    # se não, return Finalizar()
+        
+        return (False,"Ciclo Negativo") # caso depois de N vezes o Beta Continuar mudando então, existe um ciclo negativo no grafo

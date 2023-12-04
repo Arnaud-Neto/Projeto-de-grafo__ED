@@ -472,6 +472,29 @@ class TestGrafo(unittest.TestCase):
         # Resultado de menores caminhos de Bellman-Ford em g_Bell2, de A até B
         self.Tupla_Bell3 = (False,'Ciclo Negativo')
 
+        #novo caso de teste
+        self.grafo_sla = MeuGrafo()
+        self.grafo_sla.adiciona_vertice('A')
+        self.grafo_sla.adiciona_vertice('B')
+        self.grafo_sla.adiciona_vertice('C')
+        self.grafo_sla.adiciona_vertice('D')
+        self.grafo_sla.adiciona_vertice('E')
+        self.grafo_sla.adiciona_vertice('F')
+        self.grafo_sla.adiciona_vertice('G')
+        self.grafo_sla.adiciona_vertice('H')
+
+        #arestas do novo caso de teste
+        self.grafo_sla.adiciona_aresta("a1", "A", "B", -1)
+        self.grafo_sla.adiciona_aresta("a2", "A", "C", -3)
+        self.grafo_sla.adiciona_aresta("a3", "B", "D", 2)
+        self.grafo_sla.adiciona_aresta("a4", "C", "H", 2)
+        self.grafo_sla.adiciona_aresta("a5", "D", "E", 5)
+        self.grafo_sla.adiciona_aresta("a6", "H", "G", 3)
+        self.grafo_sla.adiciona_aresta("a7", "E", "F", 5)
+        self.grafo_sla.adiciona_aresta("a8", "G", "F", 1)
+
+        
+
 
 
 

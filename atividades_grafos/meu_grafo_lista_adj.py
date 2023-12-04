@@ -2,7 +2,8 @@ from bibgrafo.grafo_lista_adjacencia import GrafoListaAdjacencia
 from bibgrafo.grafo_errors import *
 
 
-
+class BellmanFordError(Exception):
+    pass
 
 
 class MeuGrafo(GrafoListaAdjacencia):
